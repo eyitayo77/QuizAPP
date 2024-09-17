@@ -28,9 +28,6 @@ class MyButton extends StatelessWidget {
           ),
         ),
       ),
-      onPressed: () {
-        Navigator.pushNamed(context, '/IntroPage');
-      },
     );
   }
 }
