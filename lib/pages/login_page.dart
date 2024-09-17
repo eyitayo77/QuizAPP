@@ -14,9 +14,9 @@ class LoginPage extends StatelessWidget {
   final passwordController = TextEditingController();
 
   // sign user in method
-  void signUserIn() {
-    Navigator.push('/IntroPage');
-  }
+  // void signUserIn() {
+  //   Navigator.push('/IntroPage');
+  // }
 
   @override
   Widget build(BuildContext context) {
