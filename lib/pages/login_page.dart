@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_quiz_app/components/my_button.dart';
 import 'package:flutter_quiz_app/components/my_textfield.dart';
 import 'package:flutter_quiz_app/components/square_tile.dart';
+import 'package:flutter_quiz_app/pages/intro_page.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -13,7 +14,9 @@ class LoginPage extends StatelessWidget {
   final passwordController = TextEditingController();
 
   // sign user in method
-  void signUserIn() {}
+  void signUserIn() {
+    Navigator.push('/IntroPage');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +84,12 @@ class LoginPage extends StatelessWidget {
 
               // sign in button
               MyButton(
-                onTap: signUserIn,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const IntroPage()),
+                  );
+                },
               ),
 
               const SizedBox(height: 50),
