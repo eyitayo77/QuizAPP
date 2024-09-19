@@ -15,7 +15,7 @@ class LoginPage extends StatelessWidget {
 
   // sign user in method
   // void signUserIn() {
-  //   Navigator.push('/IntroPage');
+  //   Navigator.pushNamed('/IntroPage');
   // }
 
   @override
