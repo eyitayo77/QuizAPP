@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quiz_app/pages/quiz_model.dart';
 
 class QuizScreen extends StatefulWidget {
+  const QuizScreen({super.key});
+
   @override
   State<QuizScreen> createState() => _QuizScreenState();
 }
@@ -158,7 +160,7 @@ class _QuizScreenState extends State<QuizScreen> {
     return AlertDialog(
       backgroundColor: Colors.grey[700],
       title: Text(
-        title + " | Score is $score",
+        "$title | Score is $score",
         style: TextStyle(color: isPassed ? Colors.green : Colors.redAccent),
       ),
       content: ElevatedButton(

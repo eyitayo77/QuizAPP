@@ -88,6 +88,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       showError('An error occurred. Please try again.');
+      print(e);
     } finally {
       setState(() {
         isLoading = false;
@@ -110,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
         tokenUrl,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // Adjust based on API requirements
+          'Authorization': 'Token $token', // Adjust based on API requirements
         },
       );
 
@@ -200,7 +201,7 @@ class _LoginPageState extends State<LoginPage> {
                       ? null
                       : signUserIn, // Disable button when loading
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -245,9 +246,9 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 50),
 
                 // Google + Apple sign in buttons
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
                     // Google button
                     SquareTile(imagePath: 'lib/images/google.png'),
 
