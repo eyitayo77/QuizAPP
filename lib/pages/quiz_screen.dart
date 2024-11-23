@@ -1,7 +1,6 @@
-// ignore_for_file: sort_child_properties_last
-
 import 'package:flutter/material.dart';
-import 'package:flutter_quiz_app/pages/quiz_model.dart';
+import 'package:flutter_quiz_app/models/quiz_model.dart';
+import 'package:flutter_quiz_app/api/quiz_service.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -11,44 +10,64 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  //define the datas
-  List<Question> questionList = getQuestions();
+  List<Question> questionList = [];
   int currentQuestionIndex = 0;
   int score = 0;
   Answer? selectedAnswer;
+  bool showCorrectAnswer = false;
+
+  @override
+  void initState() {
+    super.initState();
+    loadQuestions();
+  }
+
+  void loadQuestions() async {
+    try {
+      List<Question> questions = await fetchQuestions();
+      setState(() {
+        questionList = questions;
+      });
+    } catch (e) {
+      print('Error fetching questions: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[300],
-      body: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-        child:
-            Column(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-          const Text(
-            "Q U E S T I O N S",
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 24,
+      body: questionList.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  const Text(
+                    "Q U E S T I O N S",
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 24,
+                    ),
+                  ),
+                  _questionWidget(),
+                  _answerList(),
+                  _nextButton(),
+                ],
+              ),
             ),
-          ),
-          _questionWidget(),
-          _answerList(),
-          _nextButton(),
-        ]),
-      ),
     );
   }
 
-  _questionWidget() {
+  Widget _questionWidget() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          "Question ${currentQuestionIndex + 1}/${questionList.length.toString()}",
+          "Question ${currentQuestionIndex + 1}/${questionList.length}",
           style: const TextStyle(
-            color: Colors.white30,
+            color: Colors.black,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
@@ -70,23 +89,22 @@ class _QuizScreenState extends State<QuizScreen> {
               fontWeight: FontWeight.w600,
             ),
           ),
-        )
+        ),
       ],
     );
   }
 
-  _answerList() {
+  Widget _answerList() {
     return Column(
       children: questionList[currentQuestionIndex]
-          .answersList
-          .map(
-            (e) => _answerButton(e),
-          )
+          .answers
+          .map((answer) => _answerButton(answer))
           .toList(),
     );
   }
 
   Widget _answerButton(Answer answer) {
+    bool isCorrectAnswer = answer.isCorrect;
     bool isSelected = answer == selectedAnswer;
 
     return Container(
@@ -96,17 +114,22 @@ class _QuizScreenState extends State<QuizScreen> {
       child: ElevatedButton(
         child: Text(answer.answerText),
         style: ElevatedButton.styleFrom(
-          foregroundColor: isSelected ? Colors.white : Colors.grey,
-          backgroundColor: isSelected ? Colors.grey[700] : Colors.white,
+          foregroundColor: Colors.white,
+          backgroundColor: showCorrectAnswer
+              ? (isCorrectAnswer
+                  ? Colors.green
+                  : (isSelected ? Colors.red : Colors.grey[700]))
+              : Colors.grey[700],
           shape: const StadiumBorder(),
         ),
         onPressed: () {
-          if (selectedAnswer == null) {
-            if (answer.isCorrect) {
+          if (!showCorrectAnswer) {
+            if (isCorrectAnswer) {
               score++;
             }
             setState(() {
               selectedAnswer = answer;
+              showCorrectAnswer = true;
             });
           }
         },
@@ -114,60 +137,53 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  _nextButton() {
-    bool isLastQuestion = false;
-    if (currentQuestionIndex == questionList.length - 1) {
-      isLastQuestion = true;
-    }
+  Widget _nextButton() {
+    bool isLastQuestion = currentQuestionIndex == questionList.length - 1;
 
-    // ignore: sized_box_for_whitespace
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.5,
-      height: 48,
-      child: ElevatedButton(
-        child: Text(isLastQuestion ? "Submit" : "Next"),
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: Colors.grey[700],
-          shape: const StadiumBorder(),
-        ),
-        onPressed: () {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.grey[800],
+        shape: const StadiumBorder(),
+      ),
+      child: Text(isLastQuestion ? "Submit" : "Next"),
+      onPressed: () {
+        if (showCorrectAnswer) {
           if (isLastQuestion) {
-            //display score
-
-            showDialog(context: context, builder: (_) => _showScoreDialog());
+            showDialog(
+              context: context,
+              builder: (_) => _showScoreDialog(),
+            );
           } else {
-            //next question
             setState(() {
-              selectedAnswer = null;
               currentQuestionIndex++;
+              selectedAnswer = null;
+              showCorrectAnswer = false;
             });
           }
-        },
-      ),
+        }
+      },
     );
   }
 
-  _showScoreDialog() {
-    bool isPassed = false;
-
-    if (score >= questionList.length * 0.6) {
-      //pass if 60 %
-      isPassed = true;
-    }
-    String title = isPassed ? "Passed " : "Failed";
+  Widget _showScoreDialog() {
+    bool isPassed = score >= questionList.length * 0.6;
+    String title = isPassed ? "Passed!" : "Failed!";
 
     return AlertDialog(
       backgroundColor: Colors.grey[700],
       title: Text(
-        "$title | Score is $score",
-        style: TextStyle(color: isPassed ? Colors.green : Colors.redAccent),
+        "$title\nYour Score: $score/${questionList.length}",
+        style: TextStyle(
+          color: isPassed ? Colors.green : Colors.redAccent,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       content: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.grey[500], // Set the background color here
+          backgroundColor: Colors.grey[500],
           foregroundColor: Colors.white,
-        ), // This sets the text color
+        ),
         child: const Text("Restart"),
         onPressed: () {
           Navigator.pop(context);
@@ -175,6 +191,7 @@ class _QuizScreenState extends State<QuizScreen> {
             currentQuestionIndex = 0;
             score = 0;
             selectedAnswer = null;
+            showCorrectAnswer = false;
           });
         },
       ),
